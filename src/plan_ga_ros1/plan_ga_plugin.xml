@@ -1,0 +1,8 @@
+<library path="lib/libplan_ga_ros1_plugin">
+  <class name="plan_ga_ros1/PlanGAROS1Plugin" type="plan_ga_ros1::PlanGAROS1Plugin" base_class_type="nav_core::BaseLocalPlanner">
+    <description>
+      GA-based local planner using neural network policy trained with genetic algorithms.
+      Provides collision-free navigation with smooth trajectories.
+    </description>
+  </class>
+</library>
