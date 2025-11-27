@@ -5,9 +5,10 @@
 2. [Installation](#installation)
 3. [Configuration](#configuration)
 4. [Building](#building)
-5. [Integration with Navigation Stack](#integration-with-navigation-stack)
-6. [Running the Planner](#running-the-planner)
-7. [Troubleshooting](#troubleshooting)
+5. [VS Code Development with Docker](#vs-code-development-with-docker)
+6. [Integration with Navigation Stack](#integration-with-navigation-stack)
+7. [Running the Planner](#running-the-planner)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -259,6 +260,245 @@ ros2 pkg list | grep plan_ga
 # Should show:
 # plan_ga_ros2
 ```
+
+---
+
+## VS Code Development with Docker
+
+For a better development experience, you can attach VS Code to the running Docker containers to edit, build, and debug code directly.
+
+### Prerequisites
+
+Install the **Dev Containers** extension in VS Code:
+- Extension ID: `ms-vscode-remote.remote-containers`
+- Install from Extensions marketplace or command palette
+
+### Method 1: Attach to Running Container (Recommended)
+
+#### Step 1: Start the Container
+
+```bash
+# Start ROS1 container (runs in background)
+cd docker/ros1
+./run.sh
+
+# OR start ROS2 container (runs in background)
+cd docker/ros2
+./run.sh
+```
+
+The container will start in detached mode and keep running in the background.
+
+#### Step 2: Attach VS Code
+
+1. Open VS Code
+2. Press `F1` or `Ctrl+Shift+P` to open command palette
+3. Type: **"Dev Containers: Attach to Running Container..."**
+4. Select `plan_ga_ros1` or `plan_ga_ros2` from the list
+5. VS Code will open a new window attached to the container
+
+#### Step 3: Open Workspace in Container
+
+In the attached VS Code window:
+1. Click **File → Open Folder**
+2. Navigate to:
+   - ROS1: `/catkin_ws/src/plan_ga`
+   - ROS2: `/ros2_ws/src/plan_ga`
+3. Click **OK**
+
+You can now edit files directly in the container!
+
+### Method 2: Use devcontainer.json (Advanced)
+
+Create `.devcontainer/devcontainer.json` in project root:
+
+```json
+{
+  "name": "ROS1 Plan GA Development",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "ros1",
+  "workspaceFolder": "/catkin_ws/src/plan_ga",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        "ms-python.python"
+      ],
+      "settings": {
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+        "files.associations": {
+          "*.h": "cpp",
+          "*.hpp": "cpp"
+        }
+      }
+    }
+  },
+  "postCreateCommand": "source /opt/ros/noetic/setup.bash"
+}
+```
+
+Then use: **"Dev Containers: Reopen in Container"**
+
+### Recommended VS Code Extensions (Install in Container)
+
+Once attached to the container, install these extensions:
+
+```bash
+# C/C++ development
+- ms-vscode.cpptools (C/C++ IntelliSense)
+- ms-vscode.cmake-tools (CMake integration)
+- twxs.cmake (CMake syntax)
+
+# ROS development
+- ms-iot.vscode-ros (ROS support)
+
+# General
+- eamodio.gitlens (Git integration)
+```
+
+### Building from VS Code
+
+#### Terminal in VS Code
+
+Open integrated terminal (`Ctrl+` backtick):
+
+```bash
+# ROS1 build
+cd /catkin_ws
+source /opt/ros/noetic/setup.bash
+catkin_make
+
+# ROS2 build
+cd /ros2_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+```
+
+#### Tasks Configuration
+
+Create `.vscode/tasks.json` in workspace:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "catkin_make",
+      "type": "shell",
+      "command": "cd /catkin_ws && source /opt/ros/noetic/setup.bash && catkin_make",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": ["$gcc"]
+    }
+  ]
+}
+```
+
+Then use `Ctrl+Shift+B` to build.
+
+### IntelliSense Configuration
+
+Create `.vscode/c_cpp_properties.json`:
+
+```json
+{
+  "configurations": [
+    {
+      "name": "ROS1",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/opt/ros/noetic/include/**",
+        "/opt/onnxruntime-linux-x64-1.16.3/include/**",
+        "/catkin_ws/devel/include/**"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/g++",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "linux-gcc-x64"
+    }
+  ],
+  "version": 4
+}
+```
+
+### Container Management
+
+**Starting Containers:**
+```bash
+cd docker/ros1  # or docker/ros2
+./run.sh
+```
+- Creates and starts container in background
+- If container already exists, just starts it
+- Containers persist until explicitly removed
+
+**Attaching to Containers:**
+```bash
+# Via terminal
+docker exec -it plan_ga_ros1 bash
+docker exec -it plan_ga_ros2 bash
+
+# Via VS Code
+# Use "Dev Containers: Attach to Running Container"
+```
+
+**Stopping Containers:**
+```bash
+cd docker/ros1  # or docker/ros2
+./stop.sh
+```
+- Stops the container but preserves it (including build artifacts)
+- Can be restarted later with `./run.sh`
+
+**Removing Containers:**
+```bash
+cd docker/ros1  # or docker/ros2
+./remove.sh
+```
+- Completely removes the container
+- Build artifacts will be lost
+- Next `./run.sh` creates a fresh container
+
+**Checking Container Status:**
+```bash
+# List all containers
+docker ps -a | grep plan_ga
+
+# Check if running
+docker ps | grep plan_ga
+```
+
+### Tips
+
+**Container Persistence:**
+- Containers run in background and survive terminal closes
+- Source code changes persist (volume mounted)
+- Build artifacts persist until container is removed
+- VS Code can attach/detach without affecting container
+
+**File Editing:**
+- Changes made in VS Code are immediately reflected on host (volume mounted)
+- No need to copy files back and forth
+
+**Multiple Windows:**
+- You can attach multiple VS Code windows to the same container
+- Useful for editing different packages simultaneously
+
+**Git Integration:**
+- Git operations work normally in VS Code
+- Commits are made as if on the host machine
+
+**Rebuilding:**
+- After code changes, rebuild using the integrated terminal
+- Use `--symlink-install` (colcon) or regular catkin_make
 
 ---
 

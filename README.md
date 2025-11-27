@@ -85,23 +85,36 @@ python training/train_nn.py --data models/checkpoints/all_trajectories.pkl --out
 ### 3. ROS1 Development (Docker)
 
 ```bash
-# Run ROS1 container
+# Start ROS1 container (runs in background)
 cd docker/ros1
 ./run.sh
 
+# Attach to container
+docker exec -it plan_ga_ros1 bash
+
 # Inside container:
 cd /catkin_ws
+source /opt/ros/noetic/setup.bash
 catkin_make
 source devel/setup.bash
-roslaunch plan_ga_ros1 test_planner.launch
+
+# Verify plugin registration
+rospack plugins --attrib=plugin nav_core | grep plan_ga
+
+# Stop container when done
+cd docker/ros1
+./stop.sh
 ```
 
 ### 4. ROS2 Development (Docker)
 
 ```bash
-# Run ROS2 container
+# Start ROS2 container (runs in background)
 cd docker/ros2
 ./run.sh
+
+# Attach to container
+docker exec -it plan_ga_ros2 bash
 
 # Inside container:
 cd /ros2_ws
@@ -113,8 +126,9 @@ source install/setup.bash
 ros2 pkg list | grep plan_ga
 ros2 plugin list | grep plan_ga
 
-# Launch test (when available)
-ros2 launch plan_ga_ros2 test_planner.launch.py
+# Stop container when done
+cd docker/ros2
+./stop.sh
 ```
 
 ## Project Structure
