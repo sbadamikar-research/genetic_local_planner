@@ -33,7 +33,43 @@ cd docker/ros2
 ./build.sh
 ```
 
-### 2. Training Workflow (Host Machine)
+### 2. Build C++ Planner
+
+#### ROS1 Build
+
+```bash
+# Run ROS1 container
+cd docker/ros1
+./run.sh
+
+# Inside container:
+cd /catkin_ws
+source /opt/ros/noetic/setup.bash
+catkin_make
+source devel/setup.bash
+
+# Verify plugin is registered
+rospack plugins --attrib=plugin nav_core | grep plan_ga
+```
+
+#### ROS2 Build
+
+```bash
+# Run ROS2 container
+cd docker/ros2
+./run.sh
+
+# Inside container:
+cd /ros2_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+
+# Verify plugin
+ros2 pkg list | grep plan_ga
+```
+
+### 3. Training Workflow (Host Machine)
 
 ```bash
 # Activate environment
@@ -69,8 +105,15 @@ cd docker/ros2
 
 # Inside container:
 cd /ros2_ws
-colcon build
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
 source install/setup.bash
+
+# Verify plugin registration
+ros2 pkg list | grep plan_ga
+ros2 plugin list | grep plan_ga
+
+# Launch test (when available)
 ros2 launch plan_ga_ros2 test_planner.launch.py
 ```
 
