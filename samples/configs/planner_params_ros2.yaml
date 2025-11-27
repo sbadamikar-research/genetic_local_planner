@@ -28,7 +28,7 @@ controller_server:
 
     # GA-based local planner
     FollowPath:
-      plugin: "plan_ga_ros2::PlanGAROS2Plugin"
+      plugin: "plan_ga_ros2/PlanGAROS2Plugin"
 
       # Model Configuration
       model_path: "/models/planner_policy.onnx"
@@ -38,25 +38,27 @@ controller_server:
       control_frequency: 10.0  # Hz
       time_horizon: 2.0        # seconds
 
-      # Velocity Limits
-      # Customize these for your robot!
+      # Velocity Limits (customize for your robot!)
       max_v_x: 1.0     # m/s (forward)
       min_v_x: -0.5    # m/s (backward)
-      max_v_y: 0.5     # m/s (left, set to 0.0 for differential drive)
-      min_v_y: -0.5    # m/s (right, set to 0.0 for differential drive)
-      max_omega: 1.0   # rad/s (counter-clockwise)
-      min_omega: -1.0  # rad/s (clockwise)
+      max_v_y: 0.5     # m/s (lateral, set to 0.0 for differential drive)
+      max_omega: 2.0   # rad/s (angular velocity)
+
+      # Acceleration Limits
+      max_acc_x: 2.5       # m/s^2 (linear x)
+      max_acc_y: 2.5       # m/s^2 (linear y)
+      max_acc_theta: 3.2   # rad/s^2 (angular)
 
       # Costmap Parameters
       costmap_window_size: 50  # pixels (50x50 grid)
+      lethal_cost_threshold: 253  # Costs >= this are lethal
+
+      # Goal Tolerances
+      xy_goal_tolerance: 0.1    # meters
+      yaw_goal_tolerance: 0.1   # radians
 
       # Safety Parameters
-      lethal_cost_threshold: 253      # Costs >= this are lethal
-      enable_collision_check: true    # Post-planning collision validation
+      enable_collision_checking: true  # Post-planning collision validation
 
-      # Trajectory Publishing
-      publish_local_plan: true
-
-      # Debugging
-      debug_mode: false         # Enable verbose logging
-      publish_cost_cloud: false # Publish costmap as point cloud
+      # Robot Footprint
+      robot_radius: 0.3  # meters (creates square footprint)
