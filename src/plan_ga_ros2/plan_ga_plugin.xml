@@ -1,0 +1,8 @@
+<library path="plan_ga_ros2_plugin">
+  <class name="plan_ga_ros2/PlanGAROS2Plugin" type="plan_ga_ros2::PlanGAROS2Plugin" base_class_type="nav2_core::Controller">
+    <description>
+      GA-based local planner using neural network policy trained with genetic algorithms.
+      Provides collision-free navigation with smooth trajectories for Nav2 stack.
+    </description>
+  </class>
+</library>
