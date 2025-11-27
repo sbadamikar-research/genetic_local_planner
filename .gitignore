@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build-py/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyTorch
+*.pth
+*.pt
+!models/*.pth
+!models/*.pt
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Training outputs
+models/checkpoints/*.pkl
+models/checkpoints/logs/
+models/logs/
+*.log
+
+# Tensorboard
+events.out.tfevents.*
+
+# ROS
+build/
+devel/
+install/
+.catkin_workspace
+*.pyc
+
+# C++
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker
+.dockerignore
+
+# Data
+*.bag
+*.rosbag
+data/
+datasets/
+
+# Temp files
+tmp/
+temp/
+*.tmp
+
+# Large files
+*.tgz
+*.tar.gz
+*.zip
+Miniconda3-latest-Linux-x86_64.sh
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep structure
+!models/.gitkeep
+!models/checkpoints/.gitkeep
+!build/.gitkeep

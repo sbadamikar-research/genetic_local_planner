@@ -1,0 +1,39 @@
+# ROS1 Local Planner Parameters
+# For use with move_base and nav_core::BaseLocalPlanner
+
+PlanGAROS1Plugin:
+  # Model Configuration
+  model_path: "/models/planner_policy.onnx"
+
+  # Planning Parameters
+  num_control_steps: 20
+  control_frequency: 10.0  # Hz
+  time_horizon: 2.0        # seconds
+
+  # Velocity Limits
+  # Customize these for your robot!
+  max_v_x: 1.0     # m/s (forward)
+  min_v_x: -0.5    # m/s (backward)
+  max_v_y: 0.5     # m/s (left, set to 0.0 for differential drive)
+  min_v_y: -0.5    # m/s (right, set to 0.0 for differential drive)
+  max_omega: 1.0   # rad/s (counter-clockwise)
+  min_omega: -1.0  # rad/s (clockwise)
+
+  # Costmap Parameters
+  costmap_window_size: 50  # pixels (50x50 grid)
+
+  # Safety Parameters
+  lethal_cost_threshold: 253      # Costs >= this are lethal
+  enable_collision_check: true    # Post-planning collision validation
+
+  # Goal Tolerance
+  xy_goal_tolerance: 0.1    # meters
+  yaw_goal_tolerance: 0.1   # radians (~5.7 degrees)
+
+  # Trajectory Publishing
+  publish_local_plan: true
+  local_plan_topic: "local_plan"
+
+  # Debugging
+  debug_mode: false         # Enable verbose logging
+  publish_cost_cloud: false # Publish costmap as point cloud

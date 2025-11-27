@@ -1,0 +1,87 @@
+# Genetic Algorithm Configuration
+
+ga:
+  # Population parameters
+  population_size: 100
+  elite_size: 10
+  mutation_rate: 0.1
+  crossover_rate: 0.8
+  num_generations: 100
+
+  # Chromosome parameters
+  time_horizon: 2.0          # seconds
+  control_frequency: 10.0    # Hz (20 timesteps)
+
+  # Velocity limits
+  v_x_limits: [-0.5, 1.0]    # m/s [min, max]
+  v_y_limits: [-0.5, 0.5]    # m/s (set to [0.0, 0.0] for differential drive)
+  omega_limits: [-1.0, 1.0]  # rad/s
+
+# Fitness function weights
+fitness_weights:
+  goal_distance: 1.0      # Primary objective
+  collision: 10.0         # Heavy collision penalty
+  smoothness: 0.5         # Moderate smoothness preference
+  time_efficiency: 0.3    # Mild efficiency incentive
+
+# Robot configuration
+robot:
+  # Footprint polygon (vertices in robot frame)
+  # Example: Square robot 0.4m x 0.4m
+  footprint:
+    - [-0.2, -0.2]
+    - [0.2, -0.2]
+    - [0.2, 0.2]
+    - [-0.2, 0.2]
+
+  # Kinematic constraints
+  max_v_x: 1.0
+  min_v_x: -0.5
+  max_v_y: 0.5    # Set to 0.0 for differential drive
+  min_v_y: -0.5   # Set to 0.0 for differential drive
+  max_omega: 1.0
+  min_omega: -1.0
+
+  # Acceleration limits (for dynamics)
+  max_acc_x: 2.0
+  max_acc_y: 2.0
+  max_acc_theta: 2.0
+
+# Costmap configuration
+costmap:
+  width: 50               # pixels
+  height: 50              # pixels
+  resolution: 0.05        # meters per pixel (2.5m x 2.5m window)
+  inflation_radius: 0.5   # meters
+  inflation_decay: 0.8    # Exponential decay factor
+
+  # Obstacle generation (for training)
+  num_obstacles_min: 3
+  num_obstacles_max: 8
+  obstacle_radius_min: 2  # pixels
+  obstacle_radius_max: 8  # pixels
+
+# Scenario generation
+scenarios:
+  num_training: 1000       # Total training scenarios
+  goal_distance_min: 1.5   # meters
+  goal_distance_max: 3.0   # meters
+
+  # Random seed for reproducibility (set to null for random)
+  random_seed: 42
+
+# Training parameters
+training:
+  # Parallel processing
+  num_workers: 8           # CPU cores for parallel fitness evaluation
+
+  # Checkpointing
+  checkpoint_interval: 100 # Save every N scenarios
+
+  # Logging
+  log_level: INFO
+  tensorboard: true
+
+  # Early stopping per scenario
+  convergence_threshold: 0.01  # Fitness improvement threshold
+  convergence_patience: 10     # Generations without improvement

@@ -1,0 +1,91 @@
+# Neural Network Configuration
+
+model:
+  # Architecture
+  costmap_size: 50
+  num_control_steps: 20
+  hidden_dim: 256
+
+  # CNN Encoder (for costmap)
+  cnn:
+    channels: [1, 32, 64, 128]  # Input channels, then conv layers
+    kernel_sizes: [5, 3, 3]
+    strides: [2, 2, 2]
+
+  # MLP Encoder (for robot state)
+  mlp:
+    input_dim: 14  # 9 (state) + 3 (goal) + 2 (metadata)
+    hidden_dims: [128, 256]
+
+  # Policy Head
+  policy_head:
+    hidden_dims: [256, 256]
+    output_dim: 60  # 20 steps * 3 controls
+
+# Training parameters
+training:
+  # Data
+  train_split: 0.8          # 80% train, 20% validation
+  filter_percentile: 25     # Filter out bottom 25% fitness trajectories
+
+  # Optimization
+  batch_size: 32
+  epochs: 50
+  learning_rate: 1e-3
+  optimizer: Adam
+  weight_decay: 1e-5
+
+  # Loss function
+  loss: MSE                 # Mean Squared Error
+
+  # Learning rate scheduling
+  scheduler:
+    type: ReduceLROnPlateau
+    mode: min
+    factor: 0.5
+    patience: 5
+    min_lr: 1e-6
+
+  # Early stopping
+  early_stopping:
+    patience: 10
+    min_delta: 1e-4
+
+  # Regularization
+  dropout: 0.0              # Set to 0.1-0.3 if overfitting occurs
+
+# Data augmentation
+augmentation:
+  # Rotation augmentation
+  rotate: true
+  rotation_angles: [90, 180, 270]  # degrees
+
+  # Noise augmentation
+  add_noise: true
+  noise_sigma: 5.0          # Gaussian noise std for costmap values
+
+  # Flip augmentation (for omnidirectional robots)
+  flip_horizontal: false
+  flip_vertical: false
+
+# Validation
+validation:
+  # Metrics to track
+  track_per_dof: true       # Track MSE for v_x, v_y, omega separately
+
+  # Simulation validation
+  run_sim_validation: true  # Run policy in simulator during training
+  sim_validation_interval: 5  # Every N epochs
+  sim_num_scenarios: 20     # Number of test scenarios
+
+# Logging
+logging:
+  log_interval: 10          # Log every N batches
+  tensorboard: true
+  save_best_only: true      # Only save model with best validation loss
+
+# ONNX Export
+onnx:
+  opset_version: 14         # ONNX opset version
+  verify_export: true       # Verify PyTorch vs ONNX outputs
+  dynamic_batch: true       # Enable dynamic batch size

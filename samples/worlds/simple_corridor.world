@@ -1,0 +1,66 @@
+# Stage world file for testing
+# Simple corridor with obstacles
+
+# Window settings
+window
+(
+  size [ 800 600 ]
+  center [ 0.0 0.0 ]
+  rotate [ 0.0 0.0 ]
+  scale 50.0
+)
+
+# Floor plan
+floorplan
+(
+  name "corridor"
+  bitmap "corridor.png"
+  size [ 10.0 10.0 2.0 ]
+  pose [ 0.0 0.0 0.0 0.0 ]
+)
+
+# Robot model
+define robot position
+(
+  size [ 0.4 0.4 0.5 ]
+  origin [ 0.0 0.0 0.0 0.0 ]
+  gui_nose 1
+  drive "diff"
+  color "blue"
+
+  # Laser scanner
+  laser
+  (
+    range_min 0.1
+    range_max 5.0
+    fov 270.0
+    samples 270
+    pose [ 0.0 0.0 0.2 0.0 ]
+  )
+)
+
+# Spawn robot
+robot
+(
+  name "robot"
+  pose [ -4.0 0.0 0.0 0.0 ]
+  color "blue"
+)
+
+# Obstacles
+define obstacle model
+(
+  size [ 0.5 0.5 1.0 ]
+  gui_nose 0
+  gui_grid 0
+  gui_outline 0
+  gripper_return 0
+  fiducial_return 0
+  laser_return 1
+  obstacle_return 1
+)
+
+# Place obstacles
+obstacle( pose [ -2.0 1.5 0.0 0.0 ] color "red" )
+obstacle( pose [ 0.0 -1.5 0.0 0.0 ] color "red" )
+obstacle( pose [ 2.0 1.0 0.0 0.0 ] color "red" )

@@ -1,0 +1,55 @@
+# Common Costmap Parameters
+# Shared between global and local costmaps for ROS1
+
+# Robot Footprint
+# Define your robot's footprint polygon
+# Vertices in robot frame (base_link)
+
+# Example 1: Square robot (0.4m x 0.4m)
+footprint: [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]]
+
+# Example 2: Circular robot (0.3m radius, approximated as octagon)
+# footprint: [[0.3, 0.0], [0.212, 0.212], [0.0, 0.3], [-0.212, 0.212],
+#             [-0.3, 0.0], [-0.212, -0.212], [0.0, -0.3], [0.212, -0.212]]
+
+# Example 3: Rectangular robot (0.6m x 0.4m)
+# footprint: [[-0.3, -0.2], [0.3, -0.2], [0.3, 0.2], [-0.3, 0.2]]
+
+# Costmap Layers
+plugins:
+  - {name: static_layer, type: "costmap_2d::StaticLayer"}
+  - {name: obstacle_layer, type: "costmap_2d::ObstacleLayer"}
+  - {name: inflation_layer, type: "costmap_2d::InflationLayer"}
+
+# Static Layer
+static_layer:
+  enabled: true
+  map_topic: "/map"
+
+# Obstacle Layer
+obstacle_layer:
+  enabled: true
+  observation_sources: laser_scan_sensor
+
+  laser_scan_sensor:
+    sensor_frame: laser_frame
+    data_type: LaserScan
+    topic: /scan
+    marking: true
+    clearing: true
+    min_obstacle_height: 0.0
+    max_obstacle_height: 2.0
+    obstacle_range: 2.5
+    raytrace_range: 3.0
+
+# Inflation Layer
+# Critical: These parameters affect the costmap used by the GA planner
+inflation_layer:
+  enabled: true
+  inflation_radius: 0.5         # meters (should match training config)
+  cost_scaling_factor: 10.0     # Exponential decay rate
+
+  # Formula: cost = 252 * exp(-cost_scaling_factor * distance / inflation_radius)
+  # Higher cost_scaling_factor = steeper decay
+  # The GA planner was trained with specific inflation parameters,
+  # so keep these consistent with training/config/ga_config.yaml

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  ros1:
+    build:
+      context: .
+      dockerfile: docker/ros1/Dockerfile
+    image: plan_ga_ros1:latest
+    container_name: plan_ga_ros1
+    volumes:
+      - ./src:/catkin_ws/src/plan_ga
+      - ./models:/models
+      - ./samples:/samples
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+  ros2:
+    build:
+      context: .
+      dockerfile: docker/ros2/Dockerfile
+    image: plan_ga_ros2:latest
+    container_name: plan_ga_ros2
+    volumes:
+      - ./src:/ros2_ws/src/plan_ga
+      - ./models:/models
+      - ./samples:/samples
+    network_mode: host
+    stdin_open: true
+    tty: true
