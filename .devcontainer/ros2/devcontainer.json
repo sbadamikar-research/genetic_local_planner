@@ -1,0 +1,95 @@
+{
+  "name": "ROS2 Humble - Plan GA Development",
+
+  // Use the existing Docker image
+  "image": "plan_ga_ros2:latest",
+
+  // Set the working directory
+  "workspaceFolder": "/ros2_ws",
+
+  // Mount volumes
+  "mounts": [
+    "source=${localWorkspaceFolder}/src/plan_ga_planner,target=/ros2_ws/src/plan_ga/plan_ga_planner,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/src/plan_ga_ros2,target=/ros2_ws/src/plan_ga/plan_ga_ros2,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/models,target=/ros2_ws/models,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/samples,target=/ros2_ws/samples,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/docs,target=/ros2_ws/docs,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/docker,target=/ros2_ws/docker,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/training,target=/ros2_ws/training,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.git,target=/ros2_ws/.git,type=bind,consistency=cached"
+  ],
+
+  // Use host network for ROS communication
+  "runArgs": [
+    "--network=host",
+    "--name=plan_ga_ros2_devcontainer"
+  ],
+
+  // Features to install
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  // VS Code customizations
+  "customizations": {
+    "vscode": {
+      // Extensions to install
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "ms-python.python",
+        "mhutchie.git-graph"
+      ],
+
+      // Settings
+      "settings": {
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.cStandard": "c11",
+        "C_Cpp.default.compilerPath": "/usr/bin/g++",
+        "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+        "C_Cpp.default.includePath": [
+          "${workspaceFolder}/**",
+          "/opt/ros/humble/include/**",
+          "/opt/onnxruntime-linux-x64-1.16.3/include/**",
+          "/ros2_ws/install/include/**"
+        ],
+        "files.associations": {
+          "*.h": "cpp",
+          "*.hpp": "cpp",
+          "*.launch.py": "python",
+          "*.xacro": "xml"
+        },
+        "editor.formatOnSave": false,
+        "editor.tabSize": 2,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "cmake.configureOnOpen": false,
+        "ros.distro": "humble",
+        "python.analysis.extraPaths": [
+          "/opt/ros/humble/lib/python3.10/site-packages"
+        ]
+      }
+    }
+  },
+
+  // Lifecycle scripts
+  "postCreateCommand": "source /opt/ros/humble/setup.bash && echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc",
+  "postStartCommand": "cd /ros2_ws && source /opt/ros/humble/setup.bash",
+
+  // Set environment variables
+  "containerEnv": {
+    "ROS_DISTRO": "humble",
+    "ROS_VERSION": "2",
+    "ONNXRUNTIME_ROOT": "/opt/onnxruntime-linux-x64-1.16.3"
+  },
+
+  // Forward ports (optional, for ROS 2 DDS, etc.)
+  "forwardPorts": [],
+
+  // Use 'postAttachCommand' to run commands after attaching
+  "postAttachCommand": "source /opt/ros/humble/setup.bash && cd /ros2_ws",
+
+  // Comment out to connect as root instead
+  "remoteUser": "root"
+}

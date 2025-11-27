@@ -1,0 +1,96 @@
+{
+  "name": "ROS1 Noetic - Plan GA Development (Default)",
+
+  // This is the default devcontainer configuration
+  // To use ROS2, manually select .devcontainer/ros2 folder
+  // Or rename this file and use ros2/devcontainer.json
+
+  // Use the existing Docker image
+  "image": "plan_ga_ros1:latest",
+
+  // Set the working directory
+  "workspaceFolder": "/catkin_ws",
+
+  // Mount volumes
+  "mounts": [
+    "source=${localWorkspaceFolder}/src/plan_ga_planner,target=/catkin_ws/src/plan_ga/plan_ga_planner,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/src/plan_ga_ros1,target=/catkin_ws/src/plan_ga/plan_ga_ros1,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/models,target=/catkin_ws/models,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/samples,target=/catkin_ws/samples,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/docs,target=/catkin_ws/docs,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/docker,target=/catkin_ws/docker,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/training,target=/catkin_ws/training,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.git,target=/catkin_ws/.git,type=bind,consistency=cached"
+  ],
+
+  // Use host network for ROS communication
+  "runArgs": [
+    "--network=host",
+    "--name=plan_ga_ros1_devcontainer"
+  ],
+
+  // Features to install
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  // VS Code customizations
+  "customizations": {
+    "vscode": {
+      // Extensions to install
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools",
+        "ms-python.python",
+        "mhutchie.git-graph"
+      ],
+
+      // Settings
+      "settings": {
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.cStandard": "c11",
+        "C_Cpp.default.compilerPath": "/usr/bin/g++",
+        "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+        "C_Cpp.default.includePath": [
+          "${workspaceFolder}/**",
+          "/opt/ros/noetic/include/**",
+          "/opt/onnxruntime-linux-x64-1.16.3/include/**",
+          "/catkin_ws/devel/include/**"
+        ],
+        "files.associations": {
+          "*.h": "cpp",
+          "*.hpp": "cpp",
+          "*.launch": "xml",
+          "*.xacro": "xml"
+        },
+        "editor.formatOnSave": false,
+        "editor.tabSize": 2,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "cmake.configureOnOpen": false,
+        "ros.distro": "noetic"
+      }
+    }
+  },
+
+  // Lifecycle scripts
+  "postCreateCommand": "source /opt/ros/noetic/setup.bash && echo 'source /opt/ros/noetic/setup.bash' >> ~/.bashrc",
+  "postStartCommand": "cd /catkin_ws && source /opt/ros/noetic/setup.bash",
+
+  // Set environment variables
+  "containerEnv": {
+    "ROS_DISTRO": "noetic",
+    "ROS_VERSION": "1",
+    "ONNXRUNTIME_ROOT": "/opt/onnxruntime-linux-x64-1.16.3"
+  },
+
+  // Forward ports (optional, for ROS Master, etc.)
+  "forwardPorts": [],
+
+  // Use 'postAttachCommand' to run commands after attaching
+  "postAttachCommand": "source /opt/ros/noetic/setup.bash && cd /catkin_ws",
+
+  // Comment out to connect as root instead
+  "remoteUser": "root"
+}
