@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     ros-noetic-nav-core \
     ros-noetic-costmap-2d \
     ros-noetic-tf2-ros \
+    ros-noetic-tf2-geometry-msgs \
+    ros-noetic-pluginlib \
     ros-noetic-stage-ros \
     ros-noetic-move-base \
     && rm -rf /var/lib/apt/lists/*

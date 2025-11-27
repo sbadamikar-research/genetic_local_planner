@@ -13,7 +13,10 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get update && apt-get install -y \
     ros-humble-nav2-core \
     ros-humble-nav2-costmap-2d \
+    ros-humble-nav2-util \
     ros-humble-tf2-ros \
+    ros-humble-tf2-geometry-msgs \
+    ros-humble-pluginlib \
     ros-humble-nav2-bringup \
     && rm -rf /var/lib/apt/lists/*
 
