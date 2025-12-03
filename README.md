@@ -75,14 +75,22 @@ ros2 pkg list | grep plan_ga
 # Activate environment
 conda activate plan_ga
 
-# Train genetic algorithm
-python training/train_ga.py --config training/config/ga_config.yaml --output models/checkpoints/
+# Step 1: Train genetic algorithm (TODO - not yet implemented)
+python training/train_ga.py \
+  --config training/config/ga_config.yaml \
+  --output models/checkpoints/ga_trajectories.pkl
 
-# Train neural network
-python training/train_nn.py --data models/checkpoints/all_trajectories.pkl --output models/distilled_policy.pth --onnx_output models/planner_policy.onnx
+# Step 2: Train neural network (distill GA behavior)
+python training/train_nn.py \
+  --data models/checkpoints/ga_trajectories.pkl \
+  --config training/config/nn_config.yaml \
+  --output models/planner_policy.onnx \
+  --checkpoint models/checkpoints/best_model.pth
+
+# The trained ONNX model (models/planner_policy.onnx) is now ready for C++ deployment
 ```
 
-### 3. ROS1 Development (Docker)
+### 4. ROS1 Development (Docker)
 
 ```bash
 # Start ROS1 container (runs in background)
@@ -106,7 +114,7 @@ cd docker/ros1
 ./stop.sh
 ```
 
-### 4. ROS2 Development (Docker)
+### 5. ROS2 Development (Docker)
 
 ```bash
 # Start ROS2 container (runs in background)
@@ -138,12 +146,20 @@ plan_ga/
 ├── docker/                  # Docker containers for ROS1/ROS2
 ├── docs/                    # Documentation
 ├── models/                  # Trained models (ONNX)
+│   └── checkpoints/         # Training checkpoints
 ├── training/                # Python training code
-│   ├── ga/                  # Genetic algorithm
-│   ├── simulator/           # Stage wrapper
-│   ├── neural_network/      # NN distillation
+│   ├── ga/                  # Genetic algorithm (TODO)
+│   ├── simulator/           # Stage wrapper (TODO)
+│   ├── neural_network/      # NN distillation (✓ COMPLETE)
+│   │   ├── model.py         # PyTorch model architecture
+│   │   └── dataset.py       # GA trajectory dataset loader
+│   ├── train_nn.py          # NN training script (✓ COMPLETE)
+│   ├── FUTURE_WORK.md       # Advanced features roadmap
+│   ├── config/              # Training configurations
+│   │   ├── ga_config.yaml   # GA hyperparameters
+│   │   └── nn_config.yaml   # NN architecture and training params
 │   └── utils/               # Utilities
-├── src/                     # C++ source code
+├── src/                     # C++ source code (✓ COMPLETE)
 │   ├── plan_ga_planner/     # Core planner (ROS-agnostic)
 │   ├── plan_ga_ros1/        # ROS1 plugin
 │   └── plan_ga_ros2/        # ROS2 plugin
@@ -158,6 +174,81 @@ plan_ga/
 - **ONNX Deployment**: Cross-platform model deployment with ONNX Runtime
 - **Dual ROS Support**: Compatible with both ROS1 Noetic and ROS2 Humble
 - **Docker-based Development**: Clean separation of training and deployment environments
+
+## Neural Network Implementation
+
+### Architecture
+
+The neural network consists of three main components:
+
+1. **CostmapEncoder** (CNN): Processes 50×50 costmap images
+   - Conv layers: [1→32→64→128] channels
+   - Kernel sizes: [5, 3, 3], strides: [2, 2, 2]
+   - Output: 256-dimensional feature vector
+
+2. **StateEncoder** (MLP): Processes robot state + goal + metadata
+   - Input: 14 dimensions (9 robot state + 3 goal + 2 metadata)
+   - Hidden layers: [14 → 128 → 256]
+   - Output: 256-dimensional feature vector
+
+3. **PolicyHead** (MLP): Generates control sequences
+   - Input: 512 dimensions (concatenated costmap + state features)
+   - Hidden layers: [512 → 256 → 256 → 60]
+   - Output: 60 dimensions (20 steps × 3 controls: v_x, v_y, omega)
+
+**Total Parameters**: ~1.95 million
+
+### ONNX Interface
+
+The model expects **4 separate input tensors** to match the C++ plugin interface:
+
+- `costmap`: [1, 1, 50, 50] - normalized costmap window
+- `robot_state`: [1, 9] - [x, y, theta, v_x, v_y, omega, a_x, a_y, alpha]
+- `goal_relative`: [1, 3] - [dx, dy, dtheta] in robot frame
+- `costmap_metadata`: [1, 2] - [inflation_decay, resolution]
+
+**Output:**
+- `control_sequence`: [1, 60] - flattened control sequence
+
+### Training
+
+The training script (`training/train_nn.py`) includes:
+- MSE loss with early stopping (patience=10)
+- Adam optimizer with ReduceLROnPlateau scheduler
+- Train/validation split (80/20)
+- Automatic ONNX export with verification
+- Console logging of training progress
+
+**Training Command:**
+```bash
+python training/train_nn.py \
+  --data models/checkpoints/ga_trajectories.pkl \
+  --config training/config/nn_config.yaml \
+  --output models/planner_policy.onnx \
+  --checkpoint models/checkpoints/best_model.pth
+```
+
+### Testing the Model
+
+Test the architecture without training data:
+```bash
+# Test model architecture
+conda activate plan_ga
+python training/neural_network/model.py
+
+# Test dataset loader with synthetic data
+python training/neural_network/dataset.py
+```
+
+### Advanced Features
+
+See `training/FUTURE_WORK.md` for planned enhancements:
+- Data augmentation (rotation, noise)
+- Per-DOF metrics tracking
+- TensorBoard logging
+- Advanced loss functions (Huber, weighted MSE, temporal consistency)
+- Hyperparameter tuning
+- Ensemble methods
 
 ## Coding Standards
 
