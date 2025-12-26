@@ -2,7 +2,7 @@
 
 **Project**: GA-Based ROS Local Planner
 **Last Updated**: 2025-12-26
-**Status**: C++ Complete, GA Training Complete, NN Training Pending
+**Status**: C++ Complete, Training Pipeline Complete, Awaiting Execution
 
 ---
 
@@ -214,18 +214,57 @@ python training/train_ga.py \
   - Coevolution
   - Hyperparameter tuning with Optuna
 
+#### 12. Neural Network Training
+**Location**: `training/neural_network/`
+**Files**: 3 modules + main script (~500 lines)
+
+- `model.py` (381 lines): CNN + MLP architecture for trajectory prediction
+  - CostmapEncoder: CNN for 50×50 costmap (4 conv layers → 256D features)
+  - StateEncoder: MLP for robot state + goal + metadata (14D → 256D)
+  - PolicyHead: Fusion MLP with residual connections (512D → 60D output)
+  - PlannerPolicy: Complete model matching ONNX interface
+  - 4 separate inputs, 1 output (20 control steps × 3 DOF flattened)
+- `dataset.py` (330 lines): PyTorch dataset for GA trajectories
+  - TrajectoryDataset: Loads from pickle with fitness filtering
+  - Train/validation splitting with random seed
+  - Automatic shape validation and tensor conversion
+  - Dataset statistics computation
+  - Synthetic data generation for testing
+- `train_nn.py` (main script): Complete training pipeline
+  - Training loop with validation
+  - Early stopping and learning rate scheduling
+  - Model checkpointing (save best model)
+  - ONNX export with input/output naming
+  - Progress tracking with tqdm
+- `__init__.py`: Module exports
+
+**Key Features**:
+- Multi-input architecture matching C++ ONNX interface
+- Batch normalization and dropout for regularization
+- Residual connections in policy head
+- MSE loss for regression task
+- Adam optimizer with learning rate scheduling
+- Configurable via YAML (nn_config.yaml)
+- ONNX export with opset 14
+
+**Usage**:
+```bash
+python training/train_nn.py \
+  --data models/checkpoints/ga_trajectories.pkl \
+  --config training/config/nn_config.yaml \
+  --output models/planner_policy.onnx \
+  --checkpoint models/checkpoints/best_model.pth
+```
+
 ### ⏳ Pending
 
-#### 1. Neural Network Training
-**Location**: `training/neural_network/`
-**Status**: Directory exists but empty
+#### 1. Training Execution
+**Goal**: Run complete training pipeline and generate ONNX model
 
-**Needs Implementation**:
-- `model.py`: CNN + MLP architecture for ONNX export
-- `dataset.py`: PyTorch dataset from GA trajectories
-- `train.py`: Training loop with validation
-- `__init__.py`: Module exports
-- `training/train_nn.py`: Main NN training script
+**Tasks**:
+1. Run GA training to collect 1000+ trajectories
+2. Train NN to distill GA behavior
+3. Verify ONNX export and model performance
 
 #### 2. ONNX Model
 **Location**: `models/`
@@ -269,18 +308,8 @@ python training/train_ga.py \
   10. feat(planner): add ROS-agnostic core planner library
 
 ### Uncommitted Changes
-- Modified: `training/ga/__init__.py` (exports updated)
-- New: `training/ga/chromosome.py` (276 lines)
-- New: `training/ga/fitness.py` (345 lines)
-- New: `training/ga/evolution.py` (343 lines)
-- New: `training/ga/operators.py` (335 lines)
-- New: `training/simulator/costmap.py`
-- New: `training/simulator/robot_model.py`
-- New: `training/simulator/collision_checker.py`
-- New: `training/simulator/environment.py`
-- New: `training/simulator/__init__.py`
-- New: `training/train_ga.py` (343 lines)
-- New: `training/GA_FUTURE_WORK.md` (765 lines)
+- New: `training/neural_network/__init__.py` (module exports)
+- Modified: `CLAUDE.md` (updated with NN training completion)
 
 ---
 
@@ -408,19 +437,23 @@ docker exec -it plan_ga_ros1 bash  # or plan_ga_ros2
 
 ## Next Steps (Priority Order)
 
-### 1. Implement Neural Network Training
-**Goal**: Generate trained ONNX model from GA trajectories
+### 1. Execute Training Pipeline
+**Goal**: Generate trained ONNX model from scratch
 
 **Tasks**:
-1. Implement NN architecture (CNN for costmap, MLP for state) - `model.py`
-2. Implement PyTorch dataset loader - `dataset.py`
-3. Implement training loop with validation - `train.py`
-4. Create main NN training script - `train_nn.py`
-5. Run GA training to collect trajectories (1000 scenarios)
-6. Train NN to mimic GA behavior
-7. Export to ONNX: `models/planner_policy.onnx`
+1. Run GA training to collect 1000+ navigation scenarios
+   ```bash
+   python training/train_ga.py --config training/config/ga_config.yaml \
+     --output models/checkpoints/ga_trajectories.pkl --num_scenarios 1000
+   ```
+2. Train neural network to distill GA behavior
+   ```bash
+   python training/train_nn.py --data models/checkpoints/ga_trajectories.pkl \
+     --config training/config/nn_config.yaml --output models/planner_policy.onnx
+   ```
+3. Verify ONNX model exports correctly and matches C++ interface
 
-**Estimated Effort**: Medium (GA infrastructure complete, NN is standard supervised learning)
+**Estimated Effort**: Large (GA training ~hours depending on CPU cores, NN training ~30min-1hr)
 
 ### 2. Verify C++ Build
 **Goal**: Confirm plugins compile successfully
@@ -518,16 +551,29 @@ plan_ga/
 │       ├── package.xml
 │       ├── plan_ga_plugin.xml
 │       └── CMakeLists.txt
-├── training/               # Python training code (NOT IMPLEMENTED)
-│   ├── ga/                 # GA components (empty)
-│   ├── simulator/          # Stage wrapper (empty)
-│   ├── neural_network/     # NN training (empty)
-│   ├── utils/              # Utilities (empty)
+├── training/               # Python training code (COMPLETE)
+│   ├── ga/                 # GA components (~900 lines)
+│   │   ├── chromosome.py   # Control sequence encoding
+│   │   ├── fitness.py      # Multi-objective evaluation
+│   │   ├── evolution.py    # GA evolution loop
+│   │   ├── operators.py    # Selection, crossover, mutation
+│   │   └── __init__.py     # Module exports
+│   ├── simulator/          # Python simulator (~1200 lines)
+│   │   ├── costmap.py      # Procedural generation with inflation
+│   │   ├── robot_model.py  # Dynamics and kinematics
+│   │   ├── collision_checker.py  # Footprint-based detection
+│   │   ├── environment.py  # Navigation wrapper
+│   │   └── __init__.py     # Module exports
+│   ├── neural_network/     # NN training (~500 lines)
+│   │   ├── model.py        # CNN + MLP architecture
+│   │   ├── dataset.py      # PyTorch dataset loader
+│   │   └── __init__.py     # Module exports
 │   ├── config/
-│   │   ├── ga_config.yaml
-│   │   └── nn_config.yaml
-│   ├── train_ga.py         # Missing
-│   └── train_nn.py         # Missing
+│   │   ├── ga_config.yaml  # GA hyperparameters
+│   │   └── nn_config.yaml  # NN architecture config
+│   ├── train_ga.py         # GA training script (343 lines)
+│   ├── train_nn.py         # NN training script (main)
+│   └── GA_FUTURE_WORK.md   # Enhancement guide (765 lines)
 ├── CLAUDE.md               # This file
 ├── CPP_IMPLEMENTATION_STATUS.md
 ├── README.md
@@ -544,11 +590,11 @@ plan_ga/
 3. Or terminal: `docker exec -it plan_ga_ros1 bash`
 4. Build: `cd /catkin_ws && catkin_make`
 
-### If Starting Python Training:
+### If Executing Training Pipeline:
 1. Activate conda: `conda activate plan_ga`
-2. Start with GA chromosome implementation: `training/ga/chromosome.py`
-3. Reference `docs/training_plan.md` for detailed protocol
-4. Use `training/config/ga_config.yaml` for hyperparameters
+2. Run GA training: `python training/train_ga.py --config training/config/ga_config.yaml --output models/checkpoints/ga_trajectories.pkl --num_scenarios 1000 --num_workers 8`
+3. Run NN training: `python training/train_nn.py --data models/checkpoints/ga_trajectories.pkl --config training/config/nn_config.yaml --output models/planner_policy.onnx`
+4. Verify ONNX model: Check `models/planner_policy.onnx` exists and has correct interface
 
 ### If Testing Integration:
 1. First ensure ONNX model exists: `models/planner_policy.onnx`
