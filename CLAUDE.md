@@ -102,8 +102,17 @@ A hybrid genetic algorithm + neural network local planner for ROS robots. The sy
 
 #### 6. Documentation
 - `README.md`: Quick start guide
-- `docs/development_plan.md`: Complete deployment guide with VS Code integration
-- `docs/training_plan.md`: GA/NN training protocol (created earlier)
+- `docs/learn/`: **Complete educational course** (10 modules, ~80 hours)
+  - Module 00: Prerequisites & Setup
+  - Module 01: Project Architecture
+  - Module 02: Genetic Algorithms
+  - Module 03: Neural Networks
+  - Module 04: ONNX Deployment
+  - Module 05: C++ Integration
+  - Module 06: ROS Fundamentals
+  - Module 07: Docker Containers
+  - Module 08: Training Pipeline
+  - Module 09: Capstone Projects
 - `CPP_IMPLEMENTATION_STATUS.md`: Implementation status tracker
 - `docker/README.md`: Container management reference
 - `.devcontainer/README.md`: Dev Container usage guide
