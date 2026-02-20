@@ -6,7 +6,7 @@ process through generations of selection, crossover, and mutation.
 """
 
 import numpy as np
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional, Callable
 from .chromosome import Chromosome
 from .fitness import FitnessEvaluator, evaluate_population_parallel
 from .operators import (
@@ -129,7 +129,8 @@ class GeneticAlgorithm:
         return next_population
 
     def run(self, environment: NavigationEnvironment, num_generations: int = None,
-            num_workers: int = 8, verbose: bool = True) -> Tuple[Chromosome, List[float]]:
+            num_workers: int = 8, verbose: bool = True,
+            callback: Optional[Callable] = None) -> Tuple[Chromosome, List[float]]:
         """
         Run GA evolution for multiple generations.
 
@@ -138,6 +139,9 @@ class GeneticAlgorithm:
             num_generations: Number of generations (default from config)
             num_workers: Number of parallel workers
             verbose: Print progress (default True)
+            callback: Optional callback function called after each generation.
+                      Signature: callback(generation, population, environment, best_chromosome)
+                      Should return True to continue, False to stop early.
 
         Returns:
             Tuple of:
@@ -165,6 +169,13 @@ class GeneticAlgorithm:
 
             if best_chromosome is None or best_in_gen.fitness > best_chromosome.fitness:
                 best_chromosome = best_in_gen.copy()
+
+            # Call callback if provided
+            if callback is not None:
+                should_continue = callback(generation, population, environment, best_chromosome)
+                if not should_continue:
+                    print(f"Training stopped by callback at generation {generation}")
+                    break
 
             # Progress
             if verbose:

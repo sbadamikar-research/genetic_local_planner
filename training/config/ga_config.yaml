@@ -4,12 +4,12 @@ ga:
   # Population parameters
   population_size: 100
   elite_size: 10
-  mutation_rate: 0.1
+  mutation_rate: 0.2
   crossover_rate: 0.8
   num_generations: 100
 
   # Chromosome parameters
-  time_horizon: 2.0          # seconds
+  time_horizon: 4.0          # seconds
   control_frequency: 10.0    # Hz (20 timesteps)
 
   # Velocity limits
@@ -49,26 +49,26 @@ robot:
 
 # Costmap configuration
 costmap:
-  width: 50               # pixels
-  height: 50              # pixels
-  resolution: 0.05        # meters per pixel (2.5m x 2.5m window)
+  width: 100              # pixels
+  height: 100             # pixels
+  resolution: 0.05        # meters per pixel
   inflation_radius: 0.5   # meters
-  inflation_decay: 0.8    # Exponential decay factor
+  inflation_decay: 0.3    # Exponential decay factor
 
   # Obstacle generation (for training)
   num_obstacles_min: 3
   num_obstacles_max: 8
-  obstacle_radius_min: 2  # pixels
-  obstacle_radius_max: 8  # pixels
+  obstacle_radius_min: 3  # pixels
+  obstacle_radius_max: 12 # pixels
 
 # Scenario generation
 scenarios:
   num_training: 1000       # Total training scenarios
-  goal_distance_min: 1.5   # meters
-  goal_distance_max: 3.0   # meters
+  goal_distance_min: 0.8   # meters
+  goal_distance_max: 2.0   # meters
 
   # Random seed for reproducibility (set to null for random)
-  random_seed: 42
+  # random_seed: 42
 
 # Training parameters
 training:
@@ -85,3 +85,24 @@ training:
   # Early stopping per scenario
   convergence_threshold: 0.01  # Fitness improvement threshold
   convergence_patience: 10     # Generations without improvement
+
+# Visualization settings (for Pygame visualizer)
+visualization:
+  # Rendering settings
+  screen_width: 2500
+  screen_height: 2200
+  costmap_render_size: 2000
+  fps_cap: 30
+
+  # Trajectory rendering
+  max_trajectories_shown: 20  # Limit population rendering (for evolution mode)
+  draw_footprints: false       # Draw robot footprint at each state
+  trajectory_line_width: 2
+
+  # Color scheme
+  background_color: [40, 40, 45]      # Dark gray
+  text_color: [220, 220, 220]         # Light gray
+  best_trajectory_color: [0, 255, 0]  # Green
+  worst_trajectory_color: [255, 0, 0] # Red
+  goal_color:   [0, 255, 0]           # Green
+  start_color:  [255, 0, 255]         # Magenta

@@ -23,13 +23,14 @@ from pathlib import Path
 from typing import Dict, List
 from tqdm import tqdm
 
-from simulator import (
+from .simulator import (
     Costmap,
     generate_random_costmap,
     RobotState,
     NavigationEnvironment
 )
-from ga import GeneticAlgorithm
+from .ga import GeneticAlgorithm
+from .visualization import GAVisualizer
 
 
 def load_config(config_path: str) -> dict:
@@ -243,6 +244,12 @@ def main():
                        help='Save checkpoint every N scenarios (default: 100)')
     parser.add_argument('--resume', type=str, default=None,
                        help='Resume from checkpoint file')
+    parser.add_argument('--visualize', type=str, default='off',
+                       choices=['off', 'scenario', 'evolution'],
+                       help='Visualization mode: off (no viz), scenario (final trajectory), '
+                            'evolution (population per generation) (default: off)')
+    parser.add_argument('--viz-freq', type=int, default=1,
+                       help='Visualize every Nth generation/scenario (default: 1)')
     args = parser.parse_args()
 
     # Load configuration
@@ -266,6 +273,19 @@ def main():
     print(f"\nInitializing GA...")
     ga = GeneticAlgorithm(config)
     environment = NavigationEnvironment(config)
+
+    # Create visualizer
+    print(f"\nInitializing visualizer (mode: {args.visualize})...")
+    visualizer = GAVisualizer(config, mode=args.visualize, viz_freq=args.viz_freq)
+
+    # Define generation callback for evolution mode
+    def generation_callback(generation, population, environment, best_chromosome):
+        """Called after each generation (evolution mode only)."""
+        if not visualizer.should_visualize(generation):
+            return True
+
+        should_continue = visualizer.on_generation_complete(generation, population, environment)
+        return should_continue
 
     # Resume from checkpoint if specified
     trajectories = []
@@ -296,13 +316,22 @@ def main():
             scenario['goal_theta']
         )
 
+        # Notify visualizer of new scenario
+        if visualizer.should_visualize(scenario_id):
+            visualizer.on_scenario_start(scenario_id, scenario)
+
         # Run GA evolution
-        best_chromosome, fitness_history = ga.run(
-            environment,
-            num_generations=config['ga']['num_generations'],
-            num_workers=args.num_workers,
-            verbose=False  # Suppress per-generation output
-        )
+        try:
+            best_chromosome, fitness_history = ga.run(
+                environment,
+                num_generations=config['ga']['num_generations'],
+                num_workers=args.num_workers,
+                verbose=False,  # Suppress per-generation output
+                callback=generation_callback if args.visualize == 'evolution' else None
+            )
+        except KeyboardInterrupt:
+            print("\nTraining interrupted by user")
+            break
 
         # Convert to trajectory dict
         trajectory_dict = trajectory_to_dict(
@@ -310,6 +339,15 @@ def main():
         )
 
         trajectories.append(trajectory_dict)
+
+        # Visualize scenario result
+        if visualizer.should_visualize(scenario_id):
+            should_continue = visualizer.on_scenario_complete(
+                scenario_id, best_chromosome, fitness_history, environment
+            )
+            if not should_continue:
+                print("\nTraining stopped by user")
+                break
 
         # Periodic checkpointing
         if (scenario_id + 1) % args.checkpoint_interval == 0:
@@ -325,6 +363,9 @@ def main():
     # Save final results
     print(f"\nSaving final trajectories to {args.output}...")
     save_checkpoint(trajectories, args.output)
+
+    # Cleanup visualizer
+    visualizer.close()
 
     # Print statistics
     print_statistics(trajectories)
